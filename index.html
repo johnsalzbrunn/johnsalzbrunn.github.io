@@ -1,12 +1,30 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Hello World</title>
+    <title>View a fullscreen map</title>
+    <meta property="og:description" content="Toggle between current view and fullscreen mode. Does not work on iPhones because a pseudo-fullscreen is used, and the code is embedded in an iframe, which prevents the map from scaling." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.0.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@4.0.0/dist/maplibre-gl.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
 </head>
 <body>
+<div id="map"></div>
 
-<h1>Hello</h1>
-<p>World</p>
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        zoom: 9,
+        center: [137.9150899566626, 36.25956997955441],
+        style:
+            'https://api.maptiler.com/maps/hybrid/style.json?key=7KCCaCyrcDmvhM0CdxNq	'
+    });
 
+    map.addControl(new maplibregl.FullscreenControl());
+</script>
 </body>
 </html>
