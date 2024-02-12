@@ -1,126 +1,114 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Display map navigation controls</title>
-    <meta property="og:description" content="Add zoom and rotation controls to the map." />
-    <meta charset='utf-8'>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.0.0/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@4.0.0/dist/maplibre-gl.js'></script>
+<!--
+
+To run this demo, you need to replace 'YOUR_API_KEY' with an API key from the ArcGIS Developers dashboard.
+
+Sign up for a free account and get an API key.
+
+https://developers.arcgis.com/documentation/mapping-apis-and-services/get-started/
+
+-->
+
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>MapLibre GL JS Tutorials: Change the place label language</title>
+
     <style>
-        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
-        html, body, #map { height: 100%; }
-        #popup {
-            position: absolute;
-            bottom: 20px;
-            left: 0;
-            right: 0;
-            margin: 0 auto;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            z-index: 1;
-            max-height: 70vh;
-            overflow-y: auto;
-            display: none;
-        }
-        #popup label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-        #popup input, #popup textarea {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 16px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            resize: vertical; /* Allow vertical resizing */
-        }
-        #popup button {
-            background-color: #4CAF50;
-            color: #fff;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        #popup button:hover {
-            background-color: #45a049;
-        }
-        #toggleButton {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background-color: #4CAF50;
-            color: #fff;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        #toggleButton:hover {
-            background-color: #45a049;
-        }
+      html,
+      body,
+      #map {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        color: #323232;
+      }
+
+      #basemaps-wrapper {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0);
+      }
+      #basemaps {
+        font-size: 16px;
+        padding: 4px 8px;
+      }
+
     </style>
-</head>
-<body>
-<div id="map"></div>
-<div id="popup">
-    <form id="submitForm">
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name">
+    <script src=https://unpkg.com/maplibre-gl@3.2.1/dist/maplibre-gl.js></script>
+    <link href=https://unpkg.com/maplibre-gl@3.2.1/dist/maplibre-gl.css rel="stylesheet" />
 
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email">
+  </head>
 
-        <label for="message">Message:</label>
-        <textarea id="message" name="message" rows="4"></textarea>
+  <body>
+    <div id="map"></div>
 
-        <label for="inputField">Enter something:</label>
-        <input type="text" id="inputField" name="inputField">
+    <div id="basemaps-wrapper">
 
-        <button type="button" onclick="submitForm()">Submit</button>
-    </form>
-</div>
-<button id="toggleButton" onclick="togglePopup()">Toggle Popup</button>
-<script>
-    const map = new maplibregl.Map({
-        container: 'map',
-        zoom: 0,
-        center: [137.9150899566626, 36.25956997955441],
-        style:
-            'https://api.maptiler.com/maps/hybrid/style.json?key=7KCCaCyrcDmvhM0CdxNq'
-    });
+      <select id="basemaps">
+        <option value="arcgis/outdoor">arcgis/outdoor</option>
+        <option value="arcgis/community">arcgis/community</option>
+        <option value="arcgis/navigation">arcgis/navigation</option>
+        <option value="arcgis/streets">arcgis/streets</option>
+        <option value="arcgis/streets-relief">arcgis/streets-relief</option>
+        <option value="arcgis/imagery">arcgis/imagery</option>
+        <option value="arcgis/oceans">arcgis/oceans</option>
+        <option value="arcgis/topographic">arcgis/topographic</option>
+        <option value="arcgis/light-gray">arcgis/light-gray</option>
+        <option value="arcgis/dark-gray">arcgis/dark-gray</option>
+        <option value="arcgis/human-geography">arcgis/human-geography</option>
+        <option value="arcgis/charted-territory">arcgis/charted-territory</option>
+        <option value="arcgis/nova">arcgis/nova</option>
+        <option value="osm/standard">osm/standard</option>
+        <option value="osm/navigation">osm/navigation</option>
+        <option value="osm/streets">osm/streets</option>
+        <option value="osm/blueprint">osm/blueprint</option>
+      </select>
 
-    // Add zoom and rotation controls to the map.
-    map.addControl(new maplibregl.NavigationControl());
+    </div>
 
-    function submitForm() {
-        const name = document.getElementById('name').value;
-        const email = document.getElementById('email').value;
-        const message = document.getElementById('message').value;
-        const inputValue = document.getElementById('inputField').value;
+    <script>
 
-        if (name && email && message && inputValue) {
-            // Get the coordinates based on your requirements
-            const coordinates = [138, 36];
+      const apiKey = "AAPK4e7f026a0d874502b96cb848c7bf7dd6Fp-zf5Tv-tEiOH3QD0CJIUqFh6SiDl2ivqdgmyUggrZPmlh7OU8cJ7tr82pW3qCA";
 
-            // Add a marker to the map
-            new maplibregl.Marker()
-                .setLngLat(coordinates)
-                .addTo(map);
-        }
-    }
+      const basemapEnum = "arcgis/outdoor";
+      const map = new maplibregl.Map({
+        container: "map", // the id of the div element
+        style: `https://basemapstyles-api.arcgis.com/arcgis/rest/services/styles/v2/styles/${basemapEnum}?token=${apiKey}`,
+        zoom: 12, // starting zoom
+        center: [-118.805, 34.027], // starting location [longitude, latitude]
+        attributionControl: false
+      }).addControl(
+        new maplibregl.AttributionControl({
+          compact: true // reduces the copyright attributions view
+        })
+      );
 
-    function togglePopup() {
-        const popup = document.getElementById('popup');
-        popup.style.display = (popup.style.display === 'none') ? 'block' : 'none';
-    }
-</script>
-</body>
+      const baseUrl = "https://basemapstyles-api.arcgis.com/arcgis/rest/services/styles/v2/styles";
+      const url = (style) => `${baseUrl}/${style}?token=${apiKey}`;
+
+      const setBasemap = (style) => {
+        // Instantiate the given basemap layer.
+        map.setStyle(url(style));
+      };
+
+      setBasemap("arcgis/outdoor");
+
+      const basemapsSelectElement = document.querySelector("#basemaps");
+
+      basemapsSelectElement.addEventListener("change", (e) => {
+        setBasemap(e.target.value);
+        console.log(e.target.value);
+      });
+
+    </script>
+
+  </body>
 </html>
 
 
