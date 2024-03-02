@@ -1,59 +1,128 @@
 <!DOCTYPE html>
-<html lang="en">
-<title>Irriplans Learn</title>
-<meta charset="UTF-8">
+<html>
+<head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <style>
-body,h1,h2,h3,h4,h5,h6 {font-family: "Lato", sans-serif}
-.w3-bar,h1,button {font-family: "Montserrat", sans-serif}
+.navbar {
+  overflow: hidden;
+  background-color: #333;
+  font-family: Arial, Helvetica, sans-serif;
+}
 
-div.ex1 {
-  width: 100%;
-  padding-top: 40px;
-  padding-left: 20px;
-  padding-right: 20px;
-  background-color: white;
+.navbar a {
+  float: left;
+  font-size: 16px;
+  color: white;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+.dropdown {
+  float: left;
+  overflow: hidden;
+}
+
+.dropdown .dropbtn {
+  cursor: pointer;
+  font-size: 16px;  
+  border: none;
+  outline: none;
+  color: white;
+  padding: 14px 16px;
+  background-color: inherit;
+  font-family: inherit;
+  margin: 0;
+}
+
+.navbar a:hover, .dropdown:hover .dropbtn, .dropbtn:focus {
+  background-color: green;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+.dropdown-content a {
+  float: none;
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
   text-align: left;
 }
-    
-    
+
+.dropdown-content a:hover {
+  background-color: #ddd;
+}
+
+.show {
+  display: block;
+}
 </style>
-<body>
-    
-    
-</div>
-<!-- Content -->
+</head>
+<body style="background-color:white;">
 
-<div class="ex1"> <br>
-    
-  <h2>1. Introduction</h2>
-  <video width="320" height="608" controls>
-  <source src="2.mp4" type="video/mp4">
-  Your browser does not support HTML video.
-  </video>
-    
-  <h2>2. Setting up an account</h2>
-  <video width="320" height="608" controls>
-  <source src="2.mp4" type="video/mp4">
-  Your browser does not support HTML video.
-  </video>
-    
-  <h2>3. Installing the app</h2>
-  <video width="320" height="608" controls>
-  <source src="2.mp4" type="video/mp4">
-  Your browser does not support HTML video.
-  </video>
+<div class="navbar">
   
- 
+  <div class="dropdown">
+  <button class="dropbtn" onclick="myFunction()">Documentation
+    <i class="fa fa-caret-down"></i>
+  </button>
+  <div class="dropdown-content" id="myDropdown">
+    <a href="#">1. Introduction</a>
+    <a href="#">2. Setting up an account</a>
+    <a href="#">3. Installing the web app to your mobile device</a>
+    <a href="#">Link 4</a>
+    <a href="#">Link 5</a>
+    <a href="#">Link 6</a>
+    <a href="#">Link 7</a>
+    <a href="#">Link 8</a>
+    <a href="#">Link 9</a>
+    <a href="#">Link 10</a>
+    <a href="#">Link 11</a>
+    <a href="#">Link 12</a>
+    <a href="#">Link 13</a>
+    <a href="#">Link 14</a>
+    <a href="#">Link 15</a>
+    <a href="#">Link 16</a>
+    <a href="#">Link 17</a>
+    <a href="#">Link 18</a>
+    <a href="#">Link 19</a>
+
+  </div>
+  </div> 
 </div>
 
+<h3>1. Introduction</h3>
+<video width="100%" height="auto" controls>
+  <source src="2.mp4" type="video/mp4">
+  Your browser does not support HTML video.
+</video>
+<p><a href="https://www.w3schools.com/">Go to next section</a></p>
 
+<script>
+/* When the user clicks on the button, 
+toggle between hiding and showing the dropdown content */
+function myFunction() {
+  document.getElementById("myDropdown").classList.toggle("show");
+}
+
+// Close the dropdown if the user clicks outside of it
+window.onclick = function(e) {
+  if (!e.target.matches('.dropbtn')) {
+  var myDropdown = document.getElementById("myDropdown");
+    if (myDropdown.classList.contains('show')) {
+      myDropdown.classList.remove('show');
+    }
+  }
+}
+</script>
 </body>
 </html>
-
-
-
