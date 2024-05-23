@@ -1,85 +1,279 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Irriplans | Documentation | Glossary</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MapLibre PDF and Image Overlay</title>
+  <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
+  <style>
+    #map {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+    }
 
-    <style>
-        html * {
-            font-size: 1em !important;
-            font-family: 'Atkinson Hyperlegible', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-        }
+    .controls-container {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+    }
 
-        .responsive {
-            width: 100%;
-            max-width: 360px;
-            height: auto;
-        }
-
-        a:link,
-        a:visited {
-            color: #00A58E;
-            background-color: transparent;
-            text-decoration: none;
-        }
-
-        a:hover,
-        a:active {
-            color: #00A58E;
-            background-color: transparent;
-            text-decoration: underline;
-        }
-
-        div {
-            text-align: center;
-        }
-
-        h1 {
-            margin-bottom: 0;
-        }
-
-        p {
-            margin-top: 0.5em;
-        }
-
-        a {
-            display: block;
-            color: #00A58E;
-            background-color: transparent;
-            text-decoration: none;
-        }
-    </style>
+    .controls button {
+      margin-bottom: 5px;
+    }
+  </style>
 </head>
 <body>
+  <input type="file" id="file-upload" accept="image/png, image/jpeg, image/jpg, image/tiff, image/tif, image/geotiff, application/pdf" />
+  <div id="map"></div>
+  <div class="controls-container">
+    <button id="rotate-right">Rotate Right</button>
+    <button id="rotate-left">Rotate Left</button>
+    <button id="increase-size">Increase Size</button>
+    <button id="decrease-size">Decrease Size</button>
+    <button id="move-up">Move Up</button>
+    <button id="move-down">Move Down</button>
+    <button id="move-left">Move Left</button>
+    <button id="move-right">Move Right</button>
+    <button id="increase-opacity">Increase Opacity</button>
+    <button id="decrease-opacity">Decrease Opacity</button>
+  </div>
 
-<div>
-    <img src="images/logo.png" alt="Logo" width="75" height="75"><br><br>
-    <a href="https://www.irriplans.com/projects/">Back to Irriplans Dashboard</a>
-    <h1>Documentation</h1><br>
-    <a href="section_1.html">Section 1. Introduction</a><br>
-    <a href="section_2.html">Section 2. Setting up an account</a><br>
-    <a href="section_3.html">Section 3. Installing the app to your mobile device</a><br>
-    <a href="section_4.html">Section 4. Creating a new project</a><br>
-    <a href="section_5.html">Section 5. Searching for a property address</a><br>
-    <a href="section_6.html">Section 6. Geolocating your device on-site</a><br>
-    <a href="section_7.html">Section 7. Zooming in/out and rotating the map</a><br>
-    <a href="section_8.html">Section 8. Switching the default basemaps</a><br>
-    <a href="section_9.html">Section 9. Integrating additional aerial imagery and data resources</a><br>
-    <a href="section_10.html">Section 10. Adding irrigation point elements to the map</a><br>
-    <a href="section_11.html">Section 11. Adding irrigation line elements to the map</a><br>
-    <a href="section_12.html">Section 12. Adding irrigation polygon elements to the map</a><br>
-    <a href="section_13.html">Section 13. Adding irrigation zone elements to the map</a><br>
-    <a href="section_14.html">Section 14. Editing and deleting irrigation elements</a><br>
-    <a href="section_15.html">Section 15. Sharing your map a view-only link</a><br>
-    <a href="section_16.html">Section 16. Returning to your dashboard</a><br>
-    <a href="section_17.html">Section 17. Accessing the application from a desktop computer</a><br>
-    <a href="section_18.html">Section 18. Exporting an image of your map as a PNG file</a><br>
-    <a href="section_19.html">Section 19. Exporting the data in your project as a GeoJSON file</a><br>
-      <p>Need help or have questions? <a href="mailto:info@irriplans.com">Contact us at info@irriplans.com</a>
-    </p>
+  <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/geotiff@2.1.3/dist-browser/geotiff.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/geotiff@latest/dist/geotiff.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+  <script>
+    // Specify workerSrc for PDF.js to avoid the fake worker warning
+    pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.js';
 
-</div>
+    function initializeMap() {
+      const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [0, 0], // starting position [lng, lat]
+        zoom: 2 // starting zoom
+      });
 
+      let currentImagePos = null;
+      let rotationAngle = 0;
+
+      document.getElementById('file-upload').addEventListener('change', function (event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/tiff', 'image/tif', 'image/geotiff', 'application/pdf'];
+        if (!validTypes.includes(file.type)) {
+          alert('Please upload a valid image or PDF file.');
+          return;
+        }
+
+        handleFileUpload(file);
+      });
+
+      async function handleFileUpload(file) {
+        if (file.type === 'application/pdf') {
+          convertPdfToPng(file);
+        } else if (file.type === 'image/tiff' || file.type === 'image/tif' || file.type === 'image/geotiff') {
+          convertGeoTiffToPng(file);
+        } else {
+          const url = URL.createObjectURL(file);
+          addImageOverlayToMap(url);
+        }
+      }
+
+      async function convertGeoTiffToPng(file) {
+        const arrayBuffer = await file.arrayBuffer();
+        const tiff = await GeoTIFF.fromArrayBuffer(arrayBuffer);
+        const image = await tiff.getImage();
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        const data = await image.readRasters();
+        canvas.width = image.getWidth();
+        canvas.height = image.getHeight();
+        const imageData = ctx.createImageData(canvas.width, canvas.height);
+
+        // Assuming 3 bands (RGB)
+        for (let i = 0; i < data[0].length; i++) {
+          imageData.data[i * 4] = data[0][i];      // Red
+          imageData.data[i * 4 + 1] = data[1][i];  // Green
+          imageData.data[i * 4 + 2] = data[2][i];  // Blue
+          imageData.data[i * 4 + 3] = 255;         // Alpha
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+        canvas.toBlob(function (blob) {
+          const url = URL.createObjectURL(blob);
+          addGeoTiffImageOverlayToMap(url, image);
+        }, 'image/png');
+      }
+
+      async function convertPdfToPng(file) {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const page = await pdf.getPage(1);
+        const viewport = page.getViewport({ scale: 2 });
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+        canvas.toBlob(function (blob) {
+          const url = URL.createObjectURL(blob);
+          addImageOverlayToMap(url);
+        }, 'image/png');
+      }
+
+      function addImageOverlayToMap(url) {
+        const bounds = map.getBounds();
+        const imgBounds = [
+          [bounds.getWest(), bounds.getNorth()], // top-left corner (longitude, latitude)
+          [bounds.getEast(), bounds.getNorth()], // top-right corner (longitude, latitude)
+          [bounds.getEast(), bounds.getSouth()], // bottom-right corner (longitude, latitude)
+          [bounds.getWest(), bounds.getSouth()]  // bottom-left corner (longitude, latitude)
+        ];
+
+        currentImagePos = imgBounds;
+
+        if (map.getSource('image-overlay')) {
+          map.getSource('image-overlay').updateImage({ url });
+          map.getSource('image-overlay').setCoordinates(imgBounds);
+        } else {
+          map.addSource('image-overlay', {
+            type: 'image',
+            url: url,
+            coordinates: imgBounds
+          });
+
+          map.addLayer({
+            id: 'image-overlay',
+            type: 'raster',
+            source: 'image-overlay',
+            paint: {
+              'raster-opacity': 0.7
+            }
+          });
+        }
+
+        const boundsObj = imgBounds.reduce((bounds, coord) => bounds.extend(coord), new maplibregl.LngLatBounds(imgBounds[0], imgBounds[0]));
+        map.fitBounds(boundsObj, {
+          padding: 20
+        });
+      }
+
+      async function addGeoTiffImageOverlayToMap(url, image) {
+        const bbox = image.getBoundingBox();
+        const imgBounds = [
+          [bbox[0], bbox[3]], // top-left corner (longitude, latitude)
+          [bbox[2], bbox[3]], // top-right corner (longitude, latitude)
+          [bbox[2], bbox[1]], // bottom-right corner (longitude, latitude)
+          [bbox[0], bbox[1]]  // bottom-left corner (longitude, latitude)
+        ];
+
+        currentImagePos = imgBounds;
+
+        if (map.getSource('image-overlay')) {
+          map.getSource('image-overlay').updateImage({ url });
+          map.getSource('image-overlay').setCoordinates(imgBounds);
+        } else {
+          map.addSource('image-overlay', {
+            type: 'image',
+            url: url,
+            coordinates: imgBounds
+          });
+
+          map.addLayer({
+            id: 'image-overlay',
+            type: 'raster',
+            source: 'image-overlay',
+            paint: {
+              'raster-opacity': 0.7
+            }
+          });
+        }
+
+        const boundsObj = imgBounds.reduce((bounds, coord) => bounds.extend(coord), new maplibregl.LngLatBounds(imgBounds[0], imgBounds[0]));
+        map.fitBounds(boundsObj, {
+          padding: 20
+        });
+      }
+
+      document.getElementById('rotate-right').addEventListener('click', () => rotateImage(-10));
+      document.getElementById('rotate-left').addEventListener('click', () => rotateImage(10));
+      document.getElementById('increase-size').addEventListener('click', () => scaleImage(1.1));
+      document.getElementById('decrease-size').addEventListener('click', () => scaleImage(0.9));
+      document.getElementById('move-up').addEventListener('click', () => moveImage('up'));
+      document.getElementById('move-down').addEventListener('click', () => moveImage('down'));
+      document.getElementById('move-left').addEventListener('click', () => moveImage('left'));
+      document.getElementById('move-right').addEventListener('click', () => moveImage('right'));
+
+      document.getElementById('increase-opacity').addEventListener('click', () => adjustOpacity(0.1));
+      document.getElementById('decrease-opacity').addEventListener('click', () => adjustOpacity(-0.1));
+
+      function moveImage(direction) {
+        const moveStep = 0.1; // Change this value to adjust movement speed
+        const moveFactor = direction === 'up' || direction === 'left' ? -moveStep : moveStep;
+
+        const newCoordinates = currentImagePos.map(coord => {
+          return direction === 'up' || direction === 'down'
+            ? [coord[0], coord[1] + moveFactor]
+            : [coord[0] + moveFactor, coord[1]];
+        });
+
+        map.getSource('image-overlay').setCoordinates(newCoordinates);
+        currentImagePos = newCoordinates;
+      }
+
+      function rotateImage(angle) {
+        if (!currentImagePos) return;
+
+        rotationAngle += angle;
+
+        const center = [(currentImagePos[0][0] + currentImagePos[2][0]) / 2, (currentImagePos[0][1] + currentImagePos[2][1]) / 2];
+
+        const newCoordinates = currentImagePos.map(coord => {
+          const dx = coord[0] - center[0];
+          const dy = coord[1] - center[1];
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          const currentAngle = Math.atan2(dy, dx);
+          const newAngle = currentAngle + (angle * Math.PI / 180);
+          return [
+            center[0] + distance * Math.cos(newAngle),
+            center[1] + distance * Math.sin(newAngle)
+          ];
+        });
+
+        map.getSource('image-overlay').setCoordinates(newCoordinates);
+        currentImagePos = newCoordinates;
+      }
+
+      function scaleImage(factor) {
+        if (!currentImagePos) return;
+
+        const center = [(currentImagePos[0][0] + currentImagePos[2][0]) / 2, (currentImagePos[0][1] + currentImagePos[2][1]) / 2];
+
+        const newCoordinates = currentImagePos.map(coord => [
+          center[0] + (coord[0] - center[0]) * factor,
+          center[1] + (coord[1] - center[1]) * factor
+        ]);
+
+        map.getSource('image-overlay').setCoordinates(newCoordinates);
+        currentImagePos = newCoordinates;
+      }
+
+      function adjustOpacity(change) {
+        const layer = map.getLayer('image-overlay');
+        const currentOpacity = map.getPaintProperty('image-overlay', 'raster-opacity');
+        const newOpacity = Math.max(0, Math.min(1, currentOpacity + change));
+        map.setPaintProperty('image-overlay', 'raster-opacity', newOpacity);
+      }
+    }
+
+    window.onload = initializeMap;
+  </script>
 </body>
 </html>
